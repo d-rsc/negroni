@@ -34,12 +34,14 @@ Handler 是一个接口定义，只要实现了 ServeHTTP(ResponseWriter, *Reque
 
 ## http.ListenAndServe  执行流程
 
-查看源码可以发现执行流程
+查看源码 net/http server.go  可以发现执行流程
 
-- net/http server.go 3035: http.ListenAndServe() 的 func 内调用 server.ListenAndServe()，把 handler 赋值给了 Server.Handler 属性
-- net/http server.go 2785: func (srv *Server) ListenAndServe() error 的 func 内调用 srv.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})
-- net/http server.go 2838: func (srv *Server) Serve(l net.Listener) error 的 func 内调用 2884 行的 go c.serve(ctx) 
-- net/http server.go 1762: func (c *conn) serve(ctx context.Context) 的 func 内调用 1878 行的 serverHandler{c.server}.ServeHTTP(w, w.req)
+```text
+3035: http.ListenAndServe() 的 func 内调用 server.ListenAndServe()，把 handler 赋值给了 Server.Handler 属性  
+2785: func (srv *Server) ListenAndServe() error 的 func 内调用 srv.Serve(tcpKeepAliveListener{ln.(*net.TCPListener)})  
+2838: func (srv *Server) Serve(l net.Listener) error 的 func 内调用 2884 行的 go c.serve(ctx)  
+1762: func (c *conn) serve(ctx context.Context) 的 func 内调用 1878 行的 serverHandler{c.server}.ServeHTTP(w, w.req)  
+```
 
 查看 serverHandler 的定义
 
@@ -162,7 +164,39 @@ func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
 
 ### DefaultServeMux 使用上的安全风险 
 
+由于 DefaultServeMux 是全局变量，因此任何程序都可以访问并注册路由 - 包括应用程序导入的任何第三方程序包。如果其中一个第三方包遭到破坏，他们可以使用 DefaultServeMux 向 Web 公开恶意 handler。 
 
+一般来说，建议使用 `http.NewServeMux` 手动创建
+
+
+## gorilla mux 使用
+
+net/http 提供的 Handle 功能，通过传入 pattern 匹配 url 的方法，在简单使用场景下是足够的，但是不免有复杂的情况，提供功能强大的路由分发，这里推荐 [mux](https://github.com/gorilla/mux)  
+简单分析
+```Go
+// 查看源码
+func NewRouter() *Router {
+	return &Router{namedRoutes: make(map[string]*Route)}
+}
+
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// ....
+}
+// 本质上就是使用了 http.Handler interface 
+
+// 调用
+r := mux.NewRouter()
+r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// code 
+})
+http.ListenAndServe("***", r)
+```
+
+当然具体完整使用，还是看这个项目的文档吧  
+
+## 总结 
+
+这次，终于理清了 http server 的处理流程了 。
 
 
 
