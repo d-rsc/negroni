@@ -1,7 +1,3 @@
-// go run simple.go
-// curl localhost:3000
-// curl localhost:3000/hello
-
 package main
 
 import (
@@ -18,7 +14,13 @@ func main() {
 	})
 
 	n := negroni.New()
-	n.Use(negroni.NewLogger())
+	n.UseFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		fmt.Fprintf(rw, "Welcome to the home page! "+r.URL.Path)
+		r.URL.Path += "?changed" // 修改请求路径
+		next(rw, r)
+
+	})
+
 	n.UseHandler(mux)
-	n.Run(":3000")
+	n.Run(":3001")
 }

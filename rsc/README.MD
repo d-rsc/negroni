@@ -1,10 +1,14 @@
-# 阅读 negroni 源码
+# negroni rsc 
 
-对应版本 2019.6.2 的 [ 7d1c5e commit](https://github.com/urfave/negroni/tree/7d1c5e0c31f98a3073127a273a4eb2f9690a715f)  
+阅读 negroni 源码，首先详细了解了 net/http server 过程作为预备知识，然后才能更好的理解 negroni 
 
-GoDoc - https://godoc.org/github.com/urfave/negroni
+目录
+- http-server
+    - examples dir 
+    - readme.md
+- negroni
+    - examples dir 
+    - readme.md
 
-## net/http 
 
-主要是 http 提供 server 这部分
 
